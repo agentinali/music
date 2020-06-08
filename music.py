@@ -155,16 +155,16 @@ if __name__=='__main__':
 
             running_loss += loss.item() * label.size(0)
             _, pred = torch.max(out, 1)
-            num_correct = (pred == label).sum()
+            num_correct = (pred == label.long()).sum()
 
-            accuracy = (pred == label).float().mean()
+            accuracy = (pred == label.long()).float().mean()
             running_acc += num_correct.item()
         # 向后传播
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
             print(i)
-            if i % 300 == 0:
+            if i % 30 == 0:
                 print('[{}/{}] Loss: {:.6f}, Acc: {:.6f}'.format(epoch + 1, num_epoches, running_loss / (batch_size * i),running_acc / (batch_size * i)))
         print('Finish {} epoch, Loss: {:.6f}, Acc: {:.6f}'.format(epoch + 1, running_loss / (len(train_loader)), running_acc / (len(train_loader))))
         model.eval()
@@ -177,7 +177,7 @@ if __name__=='__main__':
                 loss = criterion(out, label.long())
                 eval_loss += loss.item() * label.size(0)
                 _, pred = torch.max(out, 1)
-                num_correct = (pred == label).sum()
+                num_correct = (pred == label.long()).sum()
                 eval_acc += num_correct.item()
             print('Test Loss: {:.6f}, Acc: {:.6f}'.format(eval_loss / (len(test_loader)), eval_acc / (len(test_loader))))
             print()
