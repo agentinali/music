@@ -109,3 +109,6 @@ for epoch in range(num_epoches):
 
 # 保存模型
 torch.save(model.state_dict(), './cnn.pth')
+
+
+
