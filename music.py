@@ -65,29 +65,32 @@ class My_Net(nn.Module):
     def __init__(self):
         super(My_Net, self).__init__()
         layer1=nn.Sequential()
-        layer1.add_module('conv1', nn.Conv2d(4, 32, 3, 2, padding=1))
+        layer1.add_module('conv1', nn.Conv2d(4, 16, 7, 1))
+        layer1.add_module('nb1', nn.BatchNorm2d(16))
         layer1.add_module('relu1', nn.ReLU(True))
         layer1.add_module('pool1', nn.MaxPool2d(2, 2))
         self.layer1=layer1
 
         layer2=nn.Sequential()
-        layer2.add_module('conv2', nn.Conv2d(32,64,3,2,padding=1))
+        layer2.add_module('conv2', nn.Conv2d(16,32,5,1))
+        layer2.add_module('nb2', nn.BatchNorm2d(32))
         layer2.add_module('relu2', nn.ReLU(True))
         layer2.add_module('pool2', nn.MaxPool2d(2, 2))
         self.layer2 = layer2
 
         layer3 = nn.Sequential()
-        layer3.add_module('conv3', nn.Conv2d(64, 128, 3, 2, padding=1))
+        layer3.add_module('conv3', nn.Conv2d(32, 64, 5, 1))
+        layer3.add_module('nb3', nn.BatchNorm2d(64))
         layer3.add_module('relu3', nn.ReLU(True))
         layer3.add_module('pool3', nn.MaxPool2d(2, 2))
         self.layer3 = layer3
 
         layer4 = nn.Sequential()
-        layer4.add_module('fc1', nn.Linear(6144,512))
+        layer4.add_module('fc1', nn.Linear(175680,1024))
         layer4.add_module('fc1_relu', nn.ReLU(True))
-        layer4.add_module('fc2', nn.Linear(512, 256))
+        layer4.add_module('fc2', nn.Linear(1024, 512))
         layer4.add_module('fc2_relu', nn.ReLU(True))
-        layer4.add_module('fc3', nn.Linear(256, num_classes))
+        layer4.add_module('fc3', nn.Linear(512, num_classes))
         self.layer4 = layer4
 
     def forward(self, x):
@@ -102,17 +105,19 @@ class My_Net(nn.Module):
 if __name__=='__main__':
     # net = My_Net()
     # print(net)
-    batch_size = 64
+    batch_size = 8
     num_workers = 0
-    num_epoches = 20
-    learning_rate = 0.001
+    num_epoches = 5
+    learning_rate = 0.01
     num_classes = 88
     weight_decay = 0.1
-    k=10
+    k=5
     # optimizer = optim.SGD(model.parameters(), lr=learning_rate, momentum=0.9)
     loss_func = nn.CrossEntropyLoss()
     tr_datas,tr_labels = read_csv(csv_file,img_path=train_path)
     tx_datas, tx_labels = read_csv(test_file, img_path=test_path)
+    test_dataset = Mydataset(tx_datas,tx_labels)
+    test_loader = DataLoader(dataset=test_dataset, batch_size=batch_size)
 
     ## K折訓練
     fold_size = len(tr_datas) // k
@@ -128,8 +133,8 @@ if __name__=='__main__':
         train_loader = DataLoader(dataset=tr_dataset, batch_size=batch_size)
         val_loader = DataLoader(dataset=val_dataset, batch_size=batch_size)
         net = My_Net()  ### 实例化模型
-        # optimizer = torch.optim.Adam(params=net.parameters(), lr=learning_rate, weight_decay=weight_decay)
-        optimizer = optim.SGD(net.parameters(), lr=learning_rate, momentum=0.9)
+        optimizer = torch.optim.Adam(params=net.parameters(), lr=learning_rate, weight_decay=weight_decay)
+        # optimizer = optim.SGD(net.parameters(), lr=learning_rate, momentum=0.9)
     # 將batch_size設為1 可看單張圖片
     # images,labels=dataiter.next()
     # images=images.numpy()
@@ -139,13 +144,14 @@ if __name__=='__main__':
     # plt.show()
     # print('type(x): ', type(x))
     # print('x.dtype: ', x.dtype)  # x的具体类型
-
+        print('-' * 25, '第', i + 1, '折', '-' * 25)
 # 开始训练
         for epoch in range(num_epoches):
-            print('epoch {}'.format(epoch + 1))
-            print('*' * 10)
+            # print('epoch {}'.format(epoch + 1))
+            # print('*' * 10)
             running_loss = 0.0
             running_acc = 0.0
+            iter_no=len(train_loader)
             for i, data in enumerate(train_loader, 1):
                 x,y = data
                 img = Variable(x)
@@ -157,19 +163,20 @@ if __name__=='__main__':
             # print(label.dtype)
             # print(len(out),len(label))
                 loss = loss_func(out, label.long())
-                running_loss += loss.item() * label.size(0)
-                _, pred = torch.max(out, 1)
-                num_correct = (pred == label.long()).sum()
-                accuracy = (pred == label.long()).float().mean()
-                running_acc += num_correct.item()
+                # running_loss += loss.item() * label.size(0)
+                # _, pred = torch.max(out, 1)
+                # num_correct = (pred == label.long()).sum()
+                # accuracy = (pred == label.long()).float().mean()
+                # running_acc += num_correct.item()
         # 向后传播
                 optimizer.zero_grad()
                 loss.backward()
                 optimizer.step()
                 # print(i)
-                if i % 80 == 0:
-                    print('[{}/{}] Loss: {:.6f}, Acc: {:.6f}'.format(epoch + 1, num_epoches, running_loss / (batch_size * i),running_acc / (batch_size * i)))
-            print('Finish {} epoch, Loss: {:.6f}, Acc: {:.6f}'.format(epoch + 1, running_loss / (len(train_loader)), running_acc / (len(train_loader))))
+                if (i+1) % 10 == 0:
+                    print('Epoch [%d/%d], Iter [%d/%d] Loss: %.6f' %(epoch + 1, num_epoches, i+1,iter_no,loss.item()))
+                    # print('[{}/{}] Loss: {:.6f}, Acc: {:.6f}'.format(epoch + 1, num_epoches, running_loss / (batch_size * i),running_acc / (batch_size * i)))
+            # print('Finish {} epoch, Loss: {:.6f}, Acc: {:.6f}'.format(epoch + 1, running_loss / (len(train_loader)), running_acc / (len(train_loader))))
             net.eval()
             with torch.no_grad():
                 eval_loss = 0
@@ -178,7 +185,8 @@ if __name__=='__main__':
                     img, label = data
                     out = net(img)
                     loss = loss_func(out, label.long())
-                    eval_loss += loss.item() * label.size(0)
+                    eval_loss += loss.item()
+                    # eval_loss += loss.item() * label.size(0)
                     _, pred = torch.max(out, 1)
                     num_correct = (pred == label.long()).sum()
                     eval_acc += num_correct.item()
@@ -188,3 +196,23 @@ if __name__=='__main__':
 
 # 保存模型
     torch.save(net.state_dict(), './cnn.pth')
+
+    net.eval()
+    with torch.no_grad():  # disable auto-grad
+        # # 將真正測試集餵給model 做預測
+        #     x = Variable(test_tensor).cuda()
+        #      y = Variable(y).cuda()
+        #     test_pred = model(x).cuda()
+
+        if cuda_flag:
+            test_pred = net(Variable(test_tensor).cuda())
+        else:
+            test_pred = net(test_tensor)
+
+        #     labelout = torch.max(test_pred, 1)[1].data.numpy()
+        labelout = torch.argmax(test_pred, dim=1)
+        outputs = labelout.cpu()
+        print(outputs)
+        # #將預測結果轉成pandas 資料格式並寫入 CSV檔，最後將此結果上傳Kaggle
+        res = pd.DataFrame({'samp_id': range(1, 7173), 'label': outputs})
+        res.to_csv('test_sub.csv', index=False)
