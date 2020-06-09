@@ -5,6 +5,7 @@ from torch.autograd import Variable
 from torch.utils.data import DataLoader
 import matplotlib.image as mpimg # mpimg 用於讀取圖片
 import cv2
+import numpy as np
 # from torchvision import transforms
 # from torchvision import datasets
 
@@ -13,12 +14,26 @@ batch_size = 32
 learning_rate = 1e-2
 num_epoches = 20
 
-img = mpimg.imread(r'./data/music_train/S2m01_08.png')
+# img = mpimg.imread(r'./data/music_train/S2m01_08.png')
+# print(img.shape)
+# print(len(img))
+# print(img.dtype)
+# print(img[0][0])
+
+img = cv2.imread(r'./data/music_train/S2m01_08.png').astype(np.float32) / 255.0
 print(img.shape)
 print(len(img))
 print(img.dtype)
-print(img)
-
+ab=torch.from_numpy(img).reshape(-1,394,520)
+print(ab[0])
+ab=ab.flatten()
+print(ab)
+cc=ab.reshape(-1,394,520)
+print(cc[0])
+print(cc.dtype)
+# img=torch.from_numpy(img).float()
+# print(img.dtype)
+# print(img)
 # def to_np(x):
 #     return x.cpu().data.numpy()
 #
