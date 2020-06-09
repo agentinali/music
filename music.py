@@ -7,6 +7,7 @@ from torch.nn import CrossEntropyLoss
 from torch.utils.data import Dataset,DataLoader,TensorDataset
 from torch.autograd import Variable
 import csv
+import cv2
 import matplotlib.pyplot as plt # plt 用於顯示圖片
 import matplotlib.image as mpimg # mpimg 用於讀取圖片
 
@@ -27,9 +28,10 @@ def read_csv(file_name,img_path):
         for i in rows:
             if i[1] == 'category': continue
             img_lab.append(np.array(int(i[1])))
-            lena = mpimg.imread(img_path + i[0])
-            # img_data.append(lena.transpose(2,0,1))
-            img_data.append(torch.from_numpy(lena.transpose(2, 0, 1)))
+            lena = cv2.imread(img_path + i[0])
+            img_data.append(lena.transpose(2,0,1))
+            # img_data.append(torch.from_numpy(lena.transpose(2, 0, 1)))
+            # img_data.append(torch.from_numpy(lena))
     return img_data, img_lab
 
 def read_img(img_names,labes,img_path):
@@ -65,7 +67,7 @@ class My_Net(nn.Module):
     def __init__(self):
         super(My_Net, self).__init__()
         layer1=nn.Sequential()
-        layer1.add_module('conv1', nn.Conv2d(4, 16, 7, 1))
+        layer1.add_module('conv1', nn.Conv2d(3, 16, 7, 1))
         layer1.add_module('nb1', nn.BatchNorm2d(16))
         layer1.add_module('relu1', nn.ReLU(True))
         layer1.add_module('pool1', nn.MaxPool2d(2, 2))
@@ -105,7 +107,7 @@ class My_Net(nn.Module):
 if __name__=='__main__':
     # net = My_Net()
     # print(net)
-    batch_size = 8
+    batch_size = 32
     num_workers = 0
     num_epoches = 5
     learning_rate = 0.01
