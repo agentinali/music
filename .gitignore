@@ -122,3 +122,4 @@ dmypy.json
 # Pyre type checker
 .pyre/
 img_data.csv
+datax/batch_check_0_1000.png
