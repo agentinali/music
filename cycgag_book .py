@@ -126,12 +126,12 @@ class GAN(object):
         self.gan_model = Model(self.inputs,self.outputs)
         self.OPTIMIZER = Adam(lr=2e-4, beta_1=0.5)
         self.gan_model.compile(loss=['mse', 'mse',
-                                    'mae', 'mae',
-                                    'mae', 'mae'],
-                            loss_weights=[  1, 1,
-                                            lambda_cycle, lambda_cycle,
-                                            lambda_id, lambda_id ],
-                            optimizer=self.OPTIMIZER)
+                                     'mae', 'mae',
+                                     'mae', 'mae'],
+                       loss_weights=[ 1, 1,
+                                      lambda_cycle, lambda_cycle,
+                                      lambda_id, lambda_id ],
+                          optimizer=self.OPTIMIZER)
         # self.save_model()
 #         self.summary()
 
